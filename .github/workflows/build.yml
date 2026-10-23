@@ -11,6 +11,7 @@ jobs:
       - run: dotnet run --project tests/ScreenRescue.Core.Tests -c Release
       - run: dotnet build src/ScreenRescue -c Release
       - run: dotnet build tests/ScreenRescue.Windows.Tests -c Release
+      - run: dotnet run --project tests/ScreenRescue.Windows.Tests -c Release --no-build -- --headless
       - run: dotnet publish src/ScreenRescue -c Release -r win-x64 --self-contained true -o publish
       - uses: actions/upload-artifact@v4
         with:

@@ -3,6 +3,7 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>0.5.1</Version>
     <!-- WPF owns DPI initialization; the manifest is needed before native monitor queries. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>

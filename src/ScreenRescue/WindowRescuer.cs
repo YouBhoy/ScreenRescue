@@ -15,8 +15,8 @@ internal sealed class WindowRescuer
     {
         Screen? target = null;
         foreach (var screen in Screen.AllScreens)
-            if (!screen.Primary && screen.DeviceName == settings.MonitorDevice) target = screen;
-        if (target is null) return "Paused: selected secondary display is disconnected or is now primary.";
+            if (screen.DeviceName == settings.MonitorDevice) target = screen;
+        if (target is null) return "Paused: selected display is disconnected.";
         if (!settings.Enabled) return "Paused — windows are free to move.";
         var display = From(target.Bounds);
         var area = settings.Bounds.Resolve(display, From(target.WorkingArea));

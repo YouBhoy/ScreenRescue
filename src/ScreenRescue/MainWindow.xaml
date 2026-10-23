@@ -6,8 +6,8 @@
  </Window.Resources>
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
   <TextBlock Text="ScreenRescue" FontSize="30" FontWeight="SemiBold"/>
-  <TextBlock Text="Keep desktop windows inside the part of your display that works." TextWrapping="Wrap" Margin="0,6,0,22" Foreground="#465466"/>
-  <TextBlock Text="Damaged secondary display" FontWeight="SemiBold"/>
+  <TextBlock Text="Keep app windows in the healthy area and black out the rest. This masks unused pixels; it does not shrink the desktop." TextWrapping="Wrap" Margin="0,6,0,22" Foreground="#465466"/>
+  <TextBlock Text="Display for window fitting" FontWeight="SemiBold"/>
   <ComboBox x:Name="MonitorBox" Margin="0,8,0,8" Padding="8" SelectionChanged="PreviewChanged"/>
   <Button Content="Refresh displays" HorizontalAlignment="Left" Click="RefreshClicked"/>
   <TextBlock Text="Usable bounds (% of the full display)" FontWeight="SemiBold" Margin="0,20,0,4"/>
@@ -18,16 +18,19 @@
    <StackPanel Grid.Column="2"><TextBlock Text="Right"/><TextBox x:Name="RightBox" Text="100" TextChanged="PreviewChanged"/></StackPanel>
    <StackPanel Grid.Column="3"><TextBlock Text="Bottom"/><TextBox x:Name="BottomBox" Text="100" TextChanged="PreviewChanged"/></StackPanel>
   </Grid>
-  <Grid Height="150" Background="#DFE5ED" ClipToBounds="True" Margin="0,0,0,8">
-   <Viewbox><Canvas x:Name="PreviewCanvas" Width="240" Height="140"><Rectangle x:Name="DisplayPreview" Width="240" Height="140" Fill="#A4ACB8"/><Rectangle x:Name="UsablePreview" Fill="#26856A"/></Canvas></Viewbox>
+  <TextBlock Text="Drag on the preview to draw an area. Drag inside to move it, or drag its edges to resize." TextWrapping="Wrap" Margin="0,0,0,8"/>
+  <Grid Height="190" Background="#DFE5ED" ClipToBounds="True" Margin="0,0,0,8">
+   <Viewbox><Canvas x:Name="PreviewCanvas" Width="240" Height="140" Background="Transparent" Cursor="Cross" MouseLeftButtonDown="PreviewDown" MouseMove="PreviewMove" MouseLeftButtonUp="PreviewUp" LostMouseCapture="PreviewCaptureLost"><Rectangle x:Name="DisplayPreview" Width="240" Height="140" Fill="Black" IsHitTestVisible="False"/><Rectangle x:Name="UsablePreview" Fill="#26856A" Stroke="White" StrokeThickness="1" IsHitTestVisible="False"/></Canvas></Viewbox>
   </Grid>
-  <Button Content="Use bottom 60%" Click="DefaultClicked" HorizontalAlignment="Left"/>
-  <CheckBox x:Name="EnabledBox" Content="Automatically fit windows on this display" Margin="0,18,0,10"/>
+  <WrapPanel><Button Content="Select area on monitor…" Click="SelectAreaClicked"/><Button Content="Use bottom 60%" Click="DefaultClicked"/></WrapPanel>
+  <CheckBox x:Name="BlackoutBox" Content="Black out everything outside the usable area" IsChecked="True" Margin="0,18,0,10"/>
+  <TextBlock Text="Apply and save starts window fitting and the selected blackout option. Pause removes the masks immediately." TextWrapping="Wrap" Margin="0,0,0,10"/>
   <CheckBox x:Name="StartupBox" Content="Launch ScreenRescue when I sign in" Margin="0,0,0,10"/>
   <CheckBox x:Name="MinimizedBox" Content="Start hidden in the system tray" Margin="0,0,0,16"/>
-  <WrapPanel><Button Content="Apply and save" Click="ApplyClicked"/><Button Content="Pause now" Click="PauseClicked"/><Button Content="Hide to tray" Click="HideClicked"/><Button Content="Quit" Click="QuitClicked"/></WrapPanel>
+  <WrapPanel><Button x:Name="ApplyButton" Content="Apply and save" Click="ApplyClicked"/><Button x:Name="PauseButton" Content="Pause now" Click="PauseClicked"/><Button Content="Hide to tray" Click="HideClicked"/><Button Content="Quit" Click="QuitClicked"/></WrapPanel>
+  <TextBlock x:Name="ApplyNotice" TextWrapping="Wrap" Margin="0,12,0,0" Foreground="#16664F"/>
   <TextBlock x:Name="StatusText" TextWrapping="Wrap" Margin="0,16,0,8" FontWeight="SemiBold"/>
   <TextBlock x:Name="HotkeyText" Text="Emergency pause: Ctrl+Alt+Shift+F12" TextWrapping="Wrap"/>
-  <TextBlock Text="Maximized windows are restored and fitted. Some apps enforce minimum sizes or ignore positioning. Closing this window keeps ScreenRescue in the tray; use Quit there to exit." TextWrapping="Wrap" Foreground="#465466" Margin="0,12,0,0"/>
+  <TextBlock Text="GPU desktop resizing must be supported by the graphics driver. This helper cannot bypass NVIDIA scaling limits. Closing settings keeps the helper in the tray; use Quit to exit." TextWrapping="Wrap" Foreground="#465466" Margin="0,12,0,0"/>
  </StackPanel></ScrollViewer>
 </Window>

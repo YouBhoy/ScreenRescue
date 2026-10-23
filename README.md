@@ -1,57 +1,60 @@
 # ScreenRescue
 
-A Windows C# WPF .NET 8 tray app that fits ordinary desktop windows into the working portion of a damaged **secondary** monitor. It does not change the monitor resolution or repair panel damage.
+Version **0.5.1** adds an optional **Black out everything outside the usable area** setting. Apply and save fits ordinary app windows and covers the unused margins on the selected physical monitor with solid black windows. There is no window over the usable rectangle, so normal mouse interaction there is unchanged. This is masking, not GPU desktop scaling.
 
-## Use
+The blackout option is enabled by default and is saved with the selected bounds. Uncheck it and apply to keep window fitting without black masks. Pause now, the tray Pause action, Ctrl+Alt+Shift+F12, and Quit remove the masks. A display-layout change also removes them and pauses fitting. Selecting a new on-monitor area temporarily removes the old masks; applying saves the new area. The full selection is kept visible, including a taskbar that falls inside it; a taskbar outside the selection is hidden by the masks.
 
-1. Set the damaged monitor to **Extend these displays** in Windows Display Settings. Set its orientation to Portrait there if desired. Keep a working display as primary.
-2. Run `ScreenRescue.exe`. Automatic fitting is off on first launch.
-3. Select the secondary monitor by its Windows device name and resolution. Only secondary displays are offered. Use **Refresh displays** after changing the display layout.
-4. Adjust Left, Top, Right and Bottom as percentages of the full monitor. Default `0, 40, 100, 100` keeps the bottom 60%; the preview follows the monitor's aspect ratio. Each dimension must span at least 5%. The effective region also excludes the taskbar's work area.
-5. Check **Automatically fit windows on this display**, then **Apply and save**. Windows assigned to that display are clamped and, if resizable, shrunk into the usable area. Other monitors are left alone.
-6. Close or hide the settings window to keep running in the tray. Double-click the tray icon to reopen settings. The tray menu offers pause, resume and quit. A separate Quit button is available in settings.
+Masks cover and block clicks in the unused area without taking keyboard focus. They use topmost windows, rather than changing the NVIDIA driver, resolution or monitor layout. Other always-on-top/system surfaces or exclusive fullscreen apps can appear above them; brief flashes are possible. **Software cannot force physically damaged/stuck pixels to turn black.** The masks hide normal displayed content and do not repair the panel.
 
-**Emergency pause: Ctrl+Alt+Shift+F12.** This always pauses; it never toggles back on. Pausing is saved so restarting stays paused. If registration fails because another app owns the shortcut, automatic fitting and hiding are disabled until ScreenRescue is restarted with the shortcut available. Tray Resume enables the saved bounds for this session; Apply and save persists enabled state for future launches.
+Validation includes exact mask coverage and disjointness at negative monitor coordinates, settings persistence, and injected UI checks for applying/disabling masks, Pause/emergency cleanup, display-change cleanup and failure cleanup. Actual live mask windows still require confirmation in an interactive desktop session.
 
-Launch at sign-in is opt-in and uses only `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\ScreenRescue`. Start hidden is a separate option. Keep the executable at a stable location before enabling startup; disable startup before moving/deleting the app. No administrator permission is required.
+Version 0.5.0 removes the virtual-monitor/whole-desktop capture feature, source-monitor selector, driver-setup link, mouse hook and mouse-release shortcut. It does not install or require any display driver.
+
+The remaining app is explicitly an **optional ordinary-window fitting helper**. It does not resize the entire desktop, taskbar or icons and is not a replacement for NVIDIA Control Panel desktop resizing. It cannot bypass GPU or driver restrictions. A genuine GPU resizing backend has not been implemented or validated.
+
+## Remove the previously added virtual monitor
+
+First quit every older ScreenRescue copy so its desktop viewer and mouse hook are stopped. Exit VDD Control too.
+
+On the machine used during development, the added virtual display adapter was verified as:
+
+- Device description: Virtual Display Driver
+- Manufacturer: MikeTheTech
+- Device instance: ROOT\DISPLAY\0000
+- Driver package: oem32.inf
+
+The NVIDIA RTX 3050 is a separate PCI device using oem10.inf. Do not remove the NVIDIA device or driver.
+
+To remove only the identified virtual display device, run this in an Administrator PowerShell window:
+
+```powershell
+pnputil /remove-device "ROOT\DISPLAY\0000"
+```
+
+This removes the device, not the separately installed VDD Control application or its staged driver package. Do not click Install in VDD Control again unless you deliberately want the virtual display back. Device identifiers are specific to this PC: on another PC, verify the device using `pnputil /enum-devices /class Display` first.
+
+Administrator access is required. ScreenRescue's own executable never elevates or removes drivers. Removing the virtual display can cause Windows to move any applications currently located on it back to the physical monitors.
+
+## Optional window fitting
+
+1. Select any connected monitor, including the primary.
+2. Drag on the preview to draw a usable rectangle; drag inside to move it or on its edges/corners to resize. The on-monitor selection overlay is also available, with Esc to cancel.
+3. Click Apply and save to enable ordinary window fitting. Default bounds keep the bottom 60% and exclude the taskbar work area.
+4. Pause now, the tray pause action or Ctrl+Alt+Shift+F12 stops future corrections. Quit exits the helper. Closing settings keeps it in the tray.
+
+Automatic startup and starting hidden are opt-in. Settings are saved atomically in `%LOCALAPPDATA%\ScreenRescue\settings.json`. Old desktop-view profiles load paused rather than silently starting ordinary window fitting; obsolete fields disappear on the next save.
+
+Only visible unowned captioned top-level windows are managed. Minimized, cloaked, tool, shell, child and ScreenRescue windows are skipped. Maximized windows are restored and fitted on a later scan; true maximize behavior is not overridden. Apps enforcing a minimum size, higher-privilege apps, borderless apps, games and exclusive fullscreen may not fit. Other monitors are left alone. Pausing does not undo previous moves.
 
 ## Build and test
 
-Requires Windows 10/11 and the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). No third-party runtime packages are used. From the repository root:
+Requires Windows 10/11 and the .NET 8 SDK. No third-party runtime packages are used.
 
 ```powershell
-dotnet build src/ScreenRescue -c Release
+dotnet build ScreenRescue.sln -c Release
 dotnet run --project tests/ScreenRescue.Core.Tests -c Release
-dotnet run --project tests/ScreenRescue.Windows.Tests -c Release
-dotnet run --project src/ScreenRescue -c Release
-```
-
-The core checks cover negative monitor coordinates, portrait bounds, taskbar exclusion, clamping, fixed-size windows, invalid percentages and config persistence. The Windows smoke checks open the settings window briefly, use a separate temporary config, exercise the real HWND pause handler, and verify primary/disconnected display guards. When a secondary display exists they also create an isolated child test window and verify native movement and maximize fitting, restricting correction to that window. Run them in an interactive Windows session with no other ScreenRescue instance.
-
-Create a portable x64 folder including the .NET runtime:
-
-```powershell
+dotnet run --project tests/ScreenRescue.Windows.Tests -c Release -- --headless
 dotnet publish src/ScreenRescue -c Release -r win-x64 --self-contained true -o publish
 ```
 
-Run `publish\ScreenRescue.exe`; keep all files in the folder together. For Windows on ARM, substitute `win-arm64`. Framework-dependent builds require the .NET 8 **Desktop Runtime**. GitHub Actions builds, runs core checks and uploads a self-contained x64 artifact on each push/PR. Download and extract that artifact from the Actions page.
-
-## Behavior and limitations
-
-- This is best-effort window management, not a Windows per-monitor work-area override. A 650 ms scan moves windows after they appear or change. Scans wait while the left mouse button is down, so dragging between monitors remains possible. Rejected moves are retried no faster than every two seconds. There may be a brief flash in the damaged area.
-- Maximize is approximated: a maximized ordinary window on the selected monitor is asynchronously restored, then resized to the usable rectangle on a later scan. It is no longer in Windows' true maximized state; restoring does not preserve its earlier normal rectangle. Snap layouts, app-owned fullscreen and custom maximize behavior may override this. No hooks or DLLs are injected into other processes. See Microsoft's [window sizing documentation](https://learn.microsoft.com/en-us/windows/win32/winmsg/window-features).
-- Only visible, unowned, captioned top-level windows are eligible. Minimized, cloaked, tool, shell, child and ScreenRescue's own windows are skipped. Dialogs, borderless apps, games, exclusive fullscreen, secure desktop and other virtual desktops are outside the intended scope. Fixed-size windows are repositioned without shrinking and may extend beyond the area. Apps enforcing a minimum size may also overflow.
-- Windows selects a window's monitor based on its rectangle; windows mostly on another display are not rescued until Windows assigns them to the selected display. Disconnecting the selected monitor or making it primary suspends fitting. It resumes if the saved device name returns as secondary. Display device names can change after driver/hardware changes, so recheck the selection after reconnecting equipment.
-- Elevated apps can reject changes from a normal process. Run both apps at the same privilege level if necessary; ScreenRescue does not request elevation. Mixed DPI uses PerMonitorV2 and physical desktop coordinates, including negative monitor positions, but needs real-hardware validation on your display arrangement.
-- Pausing/quitting stops future corrections; previously moved windows are not restored. Windows display modes, global work area and resolution are never changed. Startup settings are retained until explicitly disabled.
-- Configuration is written atomically to `%LOCALAPPDATA%\ScreenRescue\settings.json`. Invalid/unreadable settings show a warning and start paused. There is one running instance per Windows session. To reset, quit ScreenRescue and rename/delete that settings file.
-
-## Manual acceptance checklist
-
-- With a portrait secondary display, verify the bottom 60% preview and taskbar exclusion; try custom bounds and a monitor positioned left/above primary.
-- Drag Notepad/File Explorer onto the target, release, resize and maximize. Confirm primary-display windows, owned dialogs and minimized windows stay untouched.
-- Test mixed display scaling, reconnect, orientation changes, making the target primary and minimum-size/elevated apps.
-- Pause via the keyboard while settings are hidden; confirm windows stop moving and restart remains paused. Reopen from tray, resume, quit and verify the shortcut is released.
-- Enable startup from the final executable location, sign out/in, test start hidden, then disable startup. Check malformed config recovery without losing access to pause/quit.
-
-Hardware-specific movement and sign-in behavior must be verified on the intended monitor setup; passing automated checks does not establish those behaviors for every app or driver.
+The core checks cover geometry, drawing/moving/resizing, invalid bounds, persistence and migration away from the removed desktop mode. Headless WPF checks exercise the real settings controls with injected startup/window services, without changing the desktop. For interactive native-window checks, run the Windows tests without `-- --headless`; they create isolated test windows on the available displays. Live tests require an interactive desktop and no other ScreenRescue instance.
