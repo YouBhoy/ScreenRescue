@@ -1,0 +1,33 @@
+<Window x:Class="ScreenRescue.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="ScreenRescue" Width="590" Height="740" MinWidth="520" MinHeight="600" WindowStartupLocation="CenterScreen" Background="#F3F5F8">
+ <Window.Resources>
+  <Style TargetType="Button"><Setter Property="Padding" Value="14,8"/><Setter Property="Margin" Value="0,0,8,0"/></Style>
+  <Style TargetType="TextBox"><Setter Property="Padding" Value="8"/><Setter Property="Margin" Value="0,4,12,12"/></Style>
+ </Window.Resources>
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
+  <TextBlock Text="ScreenRescue" FontSize="30" FontWeight="SemiBold"/>
+  <TextBlock Text="Keep desktop windows inside the part of your display that works." TextWrapping="Wrap" Margin="0,6,0,22" Foreground="#465466"/>
+  <TextBlock Text="Damaged secondary display" FontWeight="SemiBold"/>
+  <ComboBox x:Name="MonitorBox" Margin="0,8,0,8" Padding="8" SelectionChanged="PreviewChanged"/>
+  <Button Content="Refresh displays" HorizontalAlignment="Left" Click="RefreshClicked"/>
+  <TextBlock Text="Usable bounds (% of the full display)" FontWeight="SemiBold" Margin="0,20,0,4"/>
+  <Grid>
+   <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+   <StackPanel><TextBlock Text="Left"/><TextBox x:Name="LeftBox" Text="0" TextChanged="PreviewChanged"/></StackPanel>
+   <StackPanel Grid.Column="1"><TextBlock Text="Top"/><TextBox x:Name="TopBox" Text="40" TextChanged="PreviewChanged"/></StackPanel>
+   <StackPanel Grid.Column="2"><TextBlock Text="Right"/><TextBox x:Name="RightBox" Text="100" TextChanged="PreviewChanged"/></StackPanel>
+   <StackPanel Grid.Column="3"><TextBlock Text="Bottom"/><TextBox x:Name="BottomBox" Text="100" TextChanged="PreviewChanged"/></StackPanel>
+  </Grid>
+  <Grid Height="150" Background="#DFE5ED" ClipToBounds="True" Margin="0,0,0,8">
+   <Viewbox><Canvas x:Name="PreviewCanvas" Width="240" Height="140"><Rectangle x:Name="DisplayPreview" Width="240" Height="140" Fill="#A4ACB8"/><Rectangle x:Name="UsablePreview" Fill="#26856A"/></Canvas></Viewbox>
+  </Grid>
+  <Button Content="Use bottom 60%" Click="DefaultClicked" HorizontalAlignment="Left"/>
+  <CheckBox x:Name="EnabledBox" Content="Automatically fit windows on this display" Margin="0,18,0,10"/>
+  <CheckBox x:Name="StartupBox" Content="Launch ScreenRescue when I sign in" Margin="0,0,0,10"/>
+  <CheckBox x:Name="MinimizedBox" Content="Start hidden in the system tray" Margin="0,0,0,16"/>
+  <WrapPanel><Button Content="Apply and save" Click="ApplyClicked"/><Button Content="Pause now" Click="PauseClicked"/><Button Content="Hide to tray" Click="HideClicked"/><Button Content="Quit" Click="QuitClicked"/></WrapPanel>
+  <TextBlock x:Name="StatusText" TextWrapping="Wrap" Margin="0,16,0,8" FontWeight="SemiBold"/>
+  <TextBlock x:Name="HotkeyText" Text="Emergency pause: Ctrl+Alt+Shift+F12" TextWrapping="Wrap"/>
+  <TextBlock Text="Maximized windows are restored and fitted. Some apps enforce minimum sizes or ignore positioning. Closing this window keeps ScreenRescue in the tray; use Quit there to exit." TextWrapping="Wrap" Foreground="#465466" Margin="0,12,0,0"/>
+ </StackPanel></ScrollViewer>
+</Window>
